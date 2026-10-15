@@ -1,0 +1,237 @@
+--- a/ClimateCamera_1_2_1_IDE1819/ClimateCamera.cpp
++++ b/ClimateCamera_1_2_1_IDE1819/ClimateCamera.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * ESP32-Climate-Camera v1.2.1 / ST7789 240x240.
++ * ESP32-Climate-Camera v1.2.1 / ILI9341 SPI 320x240 landscape.
+  * Климатический модуль основан на приложенных исходниках предыдущего релиза.
+  * Wi-Fi/HTTP/OTA добавлены в отдельной задаче; климатом владеет только loop.
+  */
+@@ -27,11 +27,11 @@
+ #ifndef ENCODER_DIRECTION
+ #define ENCODER_DIRECTION 1
+ #endif
+-#if !defined(TFT_WIDTH) || TFT_WIDTH != 240 || !defined(TFT_HEIGHT) || TFT_HEIGHT != 240
+-#error "TFT_eSPI: select a 240x240 panel in the active setup"
++#if !defined(TFT_WIDTH) || TFT_WIDTH != 240 || !defined(TFT_HEIGHT) || TFT_HEIGHT != 320
++#error "TFT_eSPI: select a native 240x320 ILI9341 panel in the active setup"
+ #endif
+-#if !defined(ST7789_DRIVER)
+-#error "TFT_eSPI: select ST7789_DRIVER in the active setup"
++#if !defined(ILI9341_DRIVER) || defined(ST7789_DRIVER)
++#error "TFT_eSPI: select ILI9341_DRIVER only in the active setup"
+ #endif
+ #if !defined(TFT_DC) || TFT_DC != 25
+ #error "TFT_eSPI: TFT_DC must be GPIO25"
+@@ -45,8 +45,11 @@
+ #if !defined(TFT_MOSI) || TFT_MOSI != 23
+ #error "TFT_eSPI: TFT_MOSI must be GPIO23"
+ #endif
+-#if defined(TFT_CS) && TFT_CS >= 0
+-#error "TFT CS wiring is unspecified: confirm wiring before using a separate CS pin"
++#if !defined(TFT_CS) || TFT_CS != 19
++#error "TFT_eSPI: TFT_CS must be GPIO19"
++#endif
++#if !defined(TFT_MISO) || TFT_MISO != -1
++#error "TFT_eSPI: TFT_MISO must be -1; GPIO19 is reserved for TFT_CS"
+ #endif
+ 
+ #if !defined(SPI_FREQUENCY) || SPI_FREQUENCY != 20000000
+@@ -79,7 +82,9 @@
+ static constexpr uint8_t PIN_RELAY_IN1=15, PIN_RELAY_IN2=17;
+ static constexpr uint8_t PIN_RELAY_IN3=14, PIN_RELAY_IN4=26;
+ static constexpr uint8_t RELAY_ON=HIGH, RELAY_OFF=LOW;
+-static constexpr int16_t SCREEN_W=240, SCREEN_H=240;
++static constexpr int16_t SCREEN_W=320, SCREEN_H=240;
++static constexpr uint8_t DISPLAY_ROTATION=1; // 1 or 3: landscape
++static_assert(DISPLAY_ROTATION==1 || DISPLAY_ROTATION==3,"Landscape rotation required");
+ static constexpr uint8_t INFO_PAGES=5, EVENT_CAPACITY=CAMERA_EVENT_CAPACITY;
+ static constexpr uint32_t SENSOR_PERIOD_MS=2000, SENSOR_STALE_MS=7000;
+ static constexpr uint8_t SENSOR_FAILURE_LIMIT=3;
+@@ -903,7 +908,7 @@
+   drawCenteredUtf8(y,text,color,scale);
+ }
+ void drawWrapped(int16_t x,int16_t y,const char *text,uint16_t color,uint8_t maxLines) {
+-  // Обрезка только по границам UTF-8; 18 крупных символов на строку.
++  // Обрезка только по границам UTF-8; длина строки зависит от SCREEN_W.
+   const uint8_t capacity=(SCREEN_W-x-8)/12;
+   for(uint8_t line=0;line<maxLines && *text;++line) {
+     char out[64]; size_t n=0;
+@@ -926,22 +931,22 @@
+ }
+ void drawHeader(const char *title,uint16_t color) {
+   drawFitCentered(8,title,color,2);
+-  canvas.drawFastHLine(8,30,224,TFT_DARKGREY);
++  canvas.drawFastHLine(8,30,SCREEN_W-16,TFT_DARKGREY);
+ }
+ void drawFooter() {
+-  canvas.drawFastHLine(8,220,224,TFT_DARKGREY);
++  canvas.drawFastHLine(8,SCREEN_H-20,SCREEN_W-16,TFT_DARKGREY);
+   char b[40];
+   if(uiMode==UI_PAGE) {
+     snprintf(b,sizeof(b),"%u/5  ВЕРСИЯ " FW_VERSION,(unsigned)currentPage+1);
+-    drawCenteredUtf8(224,b,TFT_LIGHTGREY,2);
+-  } else if(uiMode==UI_MENU) drawCenteredUtf8(224,"КНОПКА: ВЫБОР",TFT_LIGHTGREY,2);
+-  else drawCenteredUtf8(224,"КНОПКА: СОХРАНИТЬ",TFT_LIGHTGREY,2);
++    drawCenteredUtf8(SCREEN_H-16,b,TFT_LIGHTGREY,2);
++  } else if(uiMode==UI_MENU) drawCenteredUtf8(SCREEN_H-16,"КНОПКА: ВЫБОР",TFT_LIGHTGREY,2);
++  else drawCenteredUtf8(SCREEN_H-16,"КНОПКА: СОХРАНИТЬ",TFT_LIGHTGREY,2);
+ }
+ void drawHomePage() {
+   drawHeader("КЛИМАТ КАМЕРА",TFT_CYAN);
+   char b[64];
+-  canvas.drawRoundRect(6,36,228,65,6,TFT_DARKGREY);
+-  canvas.drawRoundRect(6,105,228,65,6,TFT_DARKGREY);
++  canvas.drawRoundRect(6,36,SCREEN_W-12,65,6,TFT_DARKGREY);
++  canvas.drawRoundRect(6,105,SCREEN_W-12,65,6,TFT_DARKGREY);
+   drawCenteredUtf8(42,"ТЕМПЕРАТУРА",TFT_LIGHTGREY,2);
+   drawCenteredUtf8(111,"ВЛАЖНОСТЬ",TFT_LIGHTGREY,2);
+   if(sensorValid) {
+@@ -963,7 +968,10 @@
+   }
+   const char *labels[]={"ХОЛ","УВЛ","ВЕН"};
+   bool states[]={relayFridge,relayHumid,relayFan};
+-  for(uint8_t i=0;i<3;++i) drawUtf8(22+i*80,203,labels[i],states[i]?TFT_GREEN:TFT_DARKGREY,2);
++  for(uint8_t i=0;i<3;++i) {
++    int16_t x=((2*i+1)*SCREEN_W)/6-utf8Width(labels[i],2)/2;
++    drawUtf8(x,203,labels[i],states[i]?TFT_GREEN:TFT_DARKGREY,2);
++  }
+ }
+ void drawOutputsPage() {
+   drawHeader("ВЫХОДЫ РЕЛЕ",TFT_YELLOW);
+@@ -971,12 +979,13 @@
+   bool states[]={relayFridge,relayHumid,relayFan};
+   for(uint8_t i=0;i<3;++i) {
+     int16_t y=42+i*56;
+-    canvas.drawRoundRect(6,y,228,48,6,states[i]?TFT_GREEN:TFT_DARKGREY);
++    canvas.drawRoundRect(6,y,SCREEN_W-12,48,6,states[i]?TFT_GREEN:TFT_DARKGREY);
+     drawUtf8(13,y+5,names[i],TFT_WHITE,2);
+     char b[28]; const uint8_t inputs[]={4,2,1};
+     snprintf(b,sizeof(b),"IN%u",(unsigned)inputs[i]);
+     drawUtf8(13,y+23,b,TFT_LIGHTGREY,2);
+-    drawUtf8(178,y+23,states[i]?"ВКЛ":"ВЫКЛ",states[i]?TFT_GREEN:TFT_RED,2);
++    const char *stateText=states[i]?"ВКЛ":"ВЫКЛ";
++    drawUtf8(SCREEN_W-14-utf8Width(stateText,2),y+23,stateText,states[i]?TFT_GREEN:TFT_RED,2);
+   }
+ }
+ void drawFanPage() {
+@@ -1001,25 +1010,25 @@
+ void drawTargetsPage() {
+   drawHeader("УСТАВКИ КЛИМАТА",TFT_ORANGE);
+   char b[48];
+-  canvas.drawRoundRect(8,39,224,36,5,TFT_DARKGREY);
++  canvas.drawRoundRect(8,39,SCREEN_W-16,36,5,TFT_DARKGREY);
+   drawUtf8(17,49,"ТЕМПЕРАТУРА",TFT_LIGHTGREY,2);
+   snprintf(b,sizeof(b),"%.1f C",cfg.tempTarget);
+-  drawUtf8(151,49,b,TFT_WHITE,2);
+-
+-  canvas.drawRoundRect(8,81,224,36,5,TFT_DARKGREY);
++  drawUtf8(SCREEN_W-16-utf8Width(b,2),49,b,TFT_WHITE,2);
++
++  canvas.drawRoundRect(8,81,SCREEN_W-16,36,5,TFT_DARKGREY);
+   drawUtf8(17,91,"ВЛАЖНОСТЬ",TFT_LIGHTGREY,2);
+   snprintf(b,sizeof(b),"%.1f %%",cfg.humTarget);
+-  drawUtf8(151,91,b,TFT_CYAN,2);
+-
+-  canvas.drawRoundRect(8,123,224,36,5,TFT_DARKGREY);
++  drawUtf8(SCREEN_W-16-utf8Width(b,2),91,b,TFT_CYAN,2);
++
++  canvas.drawRoundRect(8,123,SCREEN_W-16,36,5,TFT_DARKGREY);
+   drawUtf8(17,133,"ГИСТЕРЕЗИС Т",TFT_LIGHTGREY,2);
+   snprintf(b,sizeof(b),"%.1f C",cfg.tempHyst);
+-  drawUtf8(151,133,b,TFT_WHITE,2);
+-
+-  canvas.drawRoundRect(8,165,224,36,5,TFT_DARKGREY);
++  drawUtf8(SCREEN_W-16-utf8Width(b,2),133,b,TFT_WHITE,2);
++
++  canvas.drawRoundRect(8,165,SCREEN_W-16,36,5,TFT_DARKGREY);
+   drawUtf8(17,175,"ГИСТЕРЕЗИС В",TFT_LIGHTGREY,2);
+   snprintf(b,sizeof(b),"%.1f %%",cfg.humHyst);
+-  drawUtf8(151,175,b,TFT_CYAN,2);
++  drawUtf8(SCREEN_W-16-utf8Width(b,2),175,b,TFT_CYAN,2);
+ }
+ void drawEventsPage() {
+   drawHeader("ЖУРНАЛ СОБЫТИЙ",TFT_CYAN);
+@@ -1031,7 +1040,7 @@
+     char b[32]; snprintf(b,sizeof(b),"%lu С",(unsigned long)(events[idx].at/1000));
+     drawUtf8(8,y,b,TFT_YELLOW,2);
+     drawWrapped(8,y+18,events[idx].text,TFT_LIGHTGREY,2);
+-    if(i+1<count) canvas.drawFastHLine(8,y+56,224,TFT_DARKGREY);
++    if(i+1<count) canvas.drawFastHLine(8,y+56,SCREEN_W-16,TFT_DARKGREY);
+   }
+   if(!count) drawCenteredUtf8(96,"ЖУРНАЛ ПУСТ",TFT_DARKGREY,2);
+ }
+@@ -1042,8 +1051,8 @@
+     if(index>=MENU_COUNT) continue;
+     int16_t y=38+row*59;
+     uint16_t bg=index==menuIndex?TFT_DARKGREY:TFT_BLACK;
+-    canvas.fillRoundRect(4,y,232,55,5,bg);
+-    if(index==menuIndex) canvas.drawRoundRect(4,y,232,55,5,TFT_CYAN);
++    canvas.fillRoundRect(4,y,SCREEN_W-8,55,5,bg);
++    if(index==menuIndex) canvas.drawRoundRect(4,y,SCREEN_W-8,55,5,TFT_CYAN);
+     drawUtf8(10,y+8,menuLabel(index),TFT_WHITE,2,bg);
+     char b[64]; formatSetting(index,cfg,b,sizeof(b));
+     drawUtf8(10,y+31,b,index==menuIndex?TFT_YELLOW:TFT_LIGHTGREY,2,bg);
+@@ -1059,7 +1068,10 @@
+   drawCenteredUtf8(184,"СОХРАНИТЬ: КНОПКА",TFT_LIGHTGREY,2);
+ }
+ void initDisplay() {
+-  tft.init(); tft.setRotation(0); tft.setTextWrap(false); tft.setTextSize(1);
++  // GPIO19 is CS, not the default ESP32 VSPI MISO.
++  digitalWrite(TFT_CS,HIGH);
++  pinMode(TFT_CS,OUTPUT);
++  tft.init(); tft.setRotation(DISPLAY_ROTATION); tft.setTextWrap(false); tft.setTextSize(1);
+   canvas.setColorDepth(16);
+   displayBytesPerPixel=2;
+   if(!canvas.createSprite(SCREEN_W,SCREEN_H)) {
+@@ -1111,7 +1123,7 @@
+ #endif
+ 
+   tft.init();
+-  tft.setRotation(0);
++  tft.setRotation(DISPLAY_ROTATION);
+   tft.setTextWrap(false);
+   tft.setTextSize(1);
+ 
+--- a/ClimateCamera_1_2_1_IDE1819/User_Setup.h
++++ b/ClimateCamera_1_2_1_IDE1819/User_Setup.h
+@@ -1,19 +1,17 @@
+-#ifndef CLIMATE_TFT_USER_SETUP_H
+-#define CLIMATE_TFT_USER_SETUP_H
+-#define USER_SETUP_INFO "ClimateCamera_ST7789_240_v1.2.1"
+-#define ST7789_DRIVER
++#pragma once
++// ESP32-Climate-Camera 1.2.1: ILI9341 SPI, native 240x320.
++// setRotation(1) in firmware produces a 320x240 landscape display.
++#define USER_SETUP_INFO "ClimateCamera 1.2.1 ILI9341 SPI CS19"
++#define ILI9341_DRIVER
+ #define TFT_WIDTH 240
+-#define TFT_HEIGHT 240
++#define TFT_HEIGHT 320
++#define TFT_MISO -1
+ #define TFT_MOSI 23
+ #define TFT_SCLK 18
+-#define TFT_CS -1
+-#define TFT_DC 25
+-#define TFT_RST 13
+-#define TFT_MISO -1
+-#define SPI_FREQUENCY 20000000
+-// Если панель требует другой инверсии, настройте только один параметр ниже.
+-// #define TFT_INVERSION_ON
+-// #define TFT_RGB_ORDER TFT_BGR
++#define TFT_CS   19
++#define TFT_DC   25
++#define TFT_RST  13
++#define TFT_RGB_ORDER TFT_BGR
+ #define LOAD_GLCD
+ #define LOAD_FONT2
+ #define LOAD_FONT4
+@@ -22,4 +20,7 @@
+ #define LOAD_FONT8
+ #define LOAD_GFXFF
+ #define SMOOTH_FONT
+-#endif
++#define SPI_FREQUENCY       20000000
++#define SPI_READ_FREQUENCY  10000000
++// No touch, SD-card or backlight GPIO is assigned by this setup.
++// GPIO19 must NOT be wired to the display SDO/MISO pin.

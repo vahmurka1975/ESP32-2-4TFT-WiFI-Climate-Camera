@@ -1,0 +1,48 @@
+{
+  "source_url": "https://codeload.github.com/vahmurka1975/ESP32-Climate-Camera/zip/refs/heads/main",
+  "source_archive_sha256": "29ba5e6c9f73ee3c8a161cd847c306ae2cc6b8a30e6f2c10f4f3b787d21d5b41",
+  "changed_original_files": [
+    "ClimateCamera_1_2_1_IDE1819/ClimateCamera.cpp",
+    "ClimateCamera_1_2_1_IDE1819/User_Setup.h"
+  ],
+  "replacement_rules": 26,
+  "original_pin_assignments_unchanged": true,
+  "control_functions_unchanged": true,
+  "network_and_sensor_sources_unchanged": true,
+  "compiled": true,
+  "hardware_tested": false,
+  "files": {
+    "BUILD_ILI9341.log": "20f6584bfa5a338bd7fa7ec7c62483fd8fe6f47caea7377e3e5eb882ca7759d8",
+    "CHANGES_ILI9341.patch": "e97bdd41e1e15b675f88ad6a4094e2c2e0d6fd52ff5e06643b797fc7bb0b03d6",
+    "ClimateCamera_1_2_1_IDE1819/ClimateCamera.cpp": "4143875911b1339a18a211208b73038456254dc5d56f9b6ede33b7615a9f0538",
+    "ClimateCamera_1_2_1_IDE1819/ClimateCamera.h": "690e1f3538218ae86181c9e7d3a54e78432f56d19f6e6e3e2172cd5a1ed561dc",
+    "ClimateCamera_1_2_1_IDE1819/ClimateCamera_1_2_1_IDE1819.ino": "b7cbcbb560b05e8fc2d846bcb1f52e98a00033f29b02b9115f662dbfd913b7b1",
+    "ClimateCamera_1_2_1_IDE1819/FirmwareVersion.h": "00f278ad87c0467f7a9ca9f1ecb65e918d68265fb03aeb30c2c1f1f39ef20589",
+    "ClimateCamera_1_2_1_IDE1819/NetworkConfig.h": "3d6da0699d39a3269de74577fb2e89b836a0d32662566a9e8bc87ea1ffdf33b4",
+    "ClimateCamera_1_2_1_IDE1819/NetworkServer.cpp": "73a9bc892097bcd5f1642072af4dc57f285f4b7e34388e50bbb8bfb7289b16aa",
+    "ClimateCamera_1_2_1_IDE1819/NetworkServer.h": "c5639f7af1b32cbfc4737880598d14ad6132d87aff0bdd66198382471de7a1f8",
+    "ClimateCamera_1_2_1_IDE1819/Secrets.example.h": "088c26201c720f1ec1995d96b8368f718df36f5f5fbe8d1973102039dc2a6ba0",
+    "ClimateCamera_1_2_1_IDE1819/Sht30Reliable.cpp": "a25d2f655bc685c86e6f351d001e6cad0930a90661d9f512594a06c2b0a5a17b",
+    "ClimateCamera_1_2_1_IDE1819/Sht30Reliable.h": "9f213c052ba225294e8822900dab9f4f2649debee6c5cf67bb6ed29bf6c3ad36",
+    "ClimateCamera_1_2_1_IDE1819/User_Setup.h": "e9e8886c458390157ce263676b2d8375a9893f9a52c640ce07823f8753928fd9",
+    "ClimateCamera_1_2_1_IDE1819/WebUI.h": "8820a7cee4966f881e130e252104e558aace887a30a012b2b54858429f05e6a6",
+    "README_ILI9341_RU.md": "971ae5bb0500b9d8ad75abbf63142b18e1088c87641ebd5ef3e1bc1a0c7b4d87",
+    "TFT_eSPI_setup/User_Setup.h": "e9e8886c458390157ce263676b2d8375a9893f9a52c640ce07823f8753928fd9",
+    "platformio.ini": "4c036545746a2f0b08bb3ea3967799834641468e0d2c3bb9ed3c820a22f7db9a"
+  },
+  "compiled_source_matches_archive": true,
+  "compile_check": {
+    "platform": "espressif32@6.9.0",
+    "board": "esp32dev",
+    "arduino_core": "2.0.17",
+    "TFT_eSPI": "2.5.43",
+    "partitions": "min_spiffs.csv",
+    "result": "SUCCESS",
+    "static_ram_bytes": 68596,
+    "available_static_ram_bytes": 327680,
+    "flash_bytes": 964485,
+    "app_partition_bytes": 1966080,
+    "dynamic_sprite_ram_included_in_static_ram": false,
+    "binaries_in_archive": false
+  }
+}
