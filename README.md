@@ -1,10 +1,14 @@
-# ESP32 Climate Camera v1.2.5 (ILI9341 2.4" 320×240 · Wi-Fi · Remote Monitoring · Web OTA)
+# ESP32 Climate Camera v1.2.6 (ILI9341 2.4" 320×240 · Wi-Fi · Remote Monitoring · Web OTA)
 
 Контроллер климатической камеры (вяление, ферментация, сыроделие, созревание) на базе **ESP32 Dev Module** с цветным дисплеем **2.4" TFT SPI ILI9341 (320×240)**, промышленным алгоритмом защиты датчика **SHT30**, ПИ-регулятором оборотов вентилятора (PWM 25 кГц + тахометр), локальным управлением энкодером и защищённым **веб-интерфейсом для локального и удалённого мониторинга через интернет**.
 
 ---
 
-## Что нового в версии v1.2.5
+## Что нового в версии v1.2.6
+
+* **Встроенный пакет иконок Favicon и PWA Web Manifest (v1.2.6):**
+  * В прошивку (`FaviconAssets.h` в памяти `PROGMEM`) встроены все иконки из репозитория [`favicon`](https://github.com/vahmurka1975/favicon): `favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `favicon-96x96.png`, `apple-touch-icon.png` (180×180), `web-app-manifest-192x192.png`, `web-app-manifest-512x512.png` и `site.webmanifest`.
+  * Иконки отдаются веб-сервером ESP32 напрямую из Flash-памяти с HTTP-кэшированием (`Cache-Control: public, max-age=86400`), поддерживают установку веб-панели как веб-приложения (PWA) на рабочий стол смартфона iOS/Android и работают без доступа к внешнему интернету.
 * **Поддержка удалённого мониторинга через проброс порта (Port Forwarding / Virtual Servers):**
   * Добавлена настройка статического локального IP-адреса на ESP32 (`CC_USE_STATIC_IP`, `WiFi.config`) для жёсткой привязки к правилу NAT на роутере **TP-Link EC225-G5**.
   * Добавлена учётная запись **«Только мониторинг» (`viewer`)**: позволяет безопасно отслеживать температуру, влажность, обороты вентилятора, состояние реле и скачивать журнал событий из интернета со смартфона, блокируя любые изменения уставок и переключения реле.
@@ -82,8 +86,8 @@ pio run -t upload
 ### Вариант 2. Arduino IDE 1.8.19
 1. Установите ядро **Arduino-ESP32 `2.0.17`** и библиотеку **TFT_eSPI `2.5.43`**.
 2. Скопируйте файл `TFT_eSPI_setup/User_Setup.h` в папку `Documents/Arduino/libraries/TFT_eSPI/User_Setup.h` с заменой.
-3. Проверьте настройки сети и пароли в `ClimateCamera_1_2_5_IDE1819/Secrets.h`.
-4. Откройте `ClimateCamera_1_2_5_IDE1819/ClimateCamera_1_2_5_IDE1819.ino`.
+3. Проверьте настройки сети и пароли в `ClimateCamera_1_2_6_IDE1819/Secrets.h`.
+4. Откройте `ClimateCamera_1_2_6_IDE1819/ClimateCamera_1_2_6_IDE1819.ino`.
 5. Выберите плату `ESP32 Dev Module` и схему разделов `Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)`.
 
 ---
