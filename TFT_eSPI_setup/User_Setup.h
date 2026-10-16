@@ -1,7 +1,7 @@
 #pragma once
-// ESP32-Climate-Camera 1.2.3: ILI9341 (variant 2) SPI, native 240x320.
+// ESP32-Climate-Camera 1.2.4: ILI9341 (variant 2) SPI, native 240x320.
 // setRotation(3) + invertDisplay(true) in firmware produces a 320x240 landscape display.
-#define USER_SETUP_INFO "ClimateCamera 1.2.3 ILI9341_2 SPI CS19"
+#define USER_SETUP_INFO "ClimateCamera 1.2.4 ILI9341_2 SPI CS19"
 #define ILI9341_2_DRIVER
 #define TFT_WIDTH  240
 #define TFT_HEIGHT 320
