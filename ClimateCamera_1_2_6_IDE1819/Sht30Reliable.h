@@ -4,7 +4,11 @@
 #include <Wire.h>
 
 // SHT30/SHT31: single shot, high repeatability, no clock stretching.
-// No printing or allocation in the driver; the caller logs one failed poll.
+// Программный Open-Drain I2C (bit-banging) без зависимости от буферов Wire.
+// Также экспортируются прямые функции initSHT30() и readSHT30(temp, hum).
+void initSHT30();
+bool readSHT30(float &outTemp, float &outHum);
+
 class Sht30Reliable {
  public:
   enum class Error : uint8_t {
@@ -32,6 +36,14 @@ class Sht30Reliable {
   TwoWire &bus;
   uint8_t pinSda,pinScl,addr;
   Diagnostic diag;
+  void sdaHigh() const;
+  void sdaLow() const;
+  void sclHigh() const;
+  void sclLow() const;
+  void i2cStart() const;
+  void i2cStop() const;
+  bool i2cWriteByte(uint8_t data) const;
+  uint8_t i2cReadByte(bool ack) const;
   bool command(uint16_t value);
   bool readBytes(uint8_t *data,size_t length);
   bool waitClockHigh();
